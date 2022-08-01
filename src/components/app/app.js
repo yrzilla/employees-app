@@ -1,3 +1,5 @@
+import { Component } from 'react';
+
 import AppInfo from '../app-info/app-info';
 import SearchPanel from '../search-panel/search-panel';
 import AppFilter from '../app-filter/app-filter';
@@ -7,25 +9,93 @@ import EmployeesAddForm from '../employees-add-form/employees-add-form';
 
 import './app.css';
 
-function App() {
+class App extends Component {
+    constructor(props){
+        super(props);
+        this.state = {
+            data: [
+                {name: "Chris H.", salary: 500, increase: true,rise: false, id: 1},
+                {name: "Robert D.", salary: 3000, increase: true,rise: false, id: 2},
+                {name: "Chris E.", salary: 1800, increase: false,rise: false, id: 3}
+            ]
+        }
+        this.maxId = 4;
+    }
 
-    const data = [
-        {name: "Chris H.", salary: 500, increase: true, id: 1},
-        {name: "Robert D.", salary: 3000, increase: true, id: 2},
-        {name: "Chris E.", salary: 1800, increase: false, id: 3}
-    ];
+    deleteItem = (id) => {
+        this.setState(({data}) =>{
+            // const index = data.findIndex(elem => elem.id === id);
+            // const before = data.slice(0, index);
+            // const after = data.slice(index + 1);
+            // const newArr = {...before, ...after};
+            return {
+                data: data.filter(item => item.id !== id) // Данные отфильтруются и остануться те элементы id которого не совпадает с тем который пришел
+            }
+        });
+    }
 
-    return (
-        <div className='app'>
-            <AppInfo/>
-            <div className="search-panel">
-                <SearchPanel/>
-                <AppFilter/>
+    addItem = (name, salary) => {
+        const newItem = {
+            name,
+            salary,
+            increase: false,
+            rise: false,
+            id: this.maxId++
+        }
+        this.setState(({data}) => {
+            const newArr = [...data, newItem];
+            return {
+                data: newArr
+            }
+        })
+    }
+
+    onToggleIncrease = (id) => {
+        this.setState(({data}) => ({ // Для изменения state мы возвращаем новый обьект у которого свойство data, (data.map возвращает новый массив)
+            data: data.map(item => { // После перебора каждого обьекта и если совпали id то мы нашли нужный обьект и возвращаем новый обьект
+                if(item.id === id) {
+                    return {...item, increase: !item.increase}
+                }
+                return item;
+            })
+        }))
+    }
+
+    onToggleRise = (id) => {
+        this.setState(({data}) => ({
+            data: data.map(item => { 
+                if(item.id === id) {
+                    return {...item, rise: !item.rise}
+                }
+                return item;
+            })
+        }))
+    }
+
+    render() {
+
+        const employees = this.state.data.length; // общее количество сотрудников
+        const increased = this.state.data.filter(item => item.increase).length; // перебираем обьект и выбираем только те у которых increase true
+
+        return (
+            <div className='app'>
+                <AppInfo
+                    employees={employees}
+                    increased={increased}/>
+                <div className="search-panel">
+                    <SearchPanel/>
+                    <AppFilter/>
+                </div>
+                <EmployeesList 
+                    data={this.state.data}
+                    onDelete={this.deleteItem}
+                    onToggleIncrease={this.onToggleIncrease}
+                    onToggleRise={this.onToggleRise}/>
+                <EmployeesAddForm
+                    onAdd={this.addItem}/>
             </div>
-            <EmployeesList data={data}/>
-            <EmployeesAddForm/>
-        </div>
-    );
+        );
+    }
 }
 
 export default App;
