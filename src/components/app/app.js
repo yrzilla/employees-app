@@ -14,10 +14,12 @@ class App extends Component {
         super(props);
         this.state = {
             data: [
-                {name: "Chris H.", salary: 500, increase: true,rise: false, id: 1},
-                {name: "Robert D.", salary: 3000, increase: true,rise: false, id: 2},
+                {name: "Chris H.", salary: 500, increase: false,rise: false, id: 1},
+                {name: "Robert D.", salary: 3000, increase: false,rise: false, id: 2},
                 {name: "Chris E.", salary: 1800, increase: false,rise: false, id: 3}
-            ]
+            ],
+            term: "",
+            filter: "all"
         }
         this.maxId = 4;
     }
@@ -50,32 +52,50 @@ class App extends Component {
         })
     }
 
-    onToggleIncrease = (id) => {
+    onToggleProp = (id, prop) => { // Менять рандомное свойство переданное как аргумент prop 
         this.setState(({data}) => ({ // Для изменения state мы возвращаем новый обьект у которого свойство data, (data.map возвращает новый массив)
             data: data.map(item => { // После перебора каждого обьекта и если совпали id то мы нашли нужный обьект и возвращаем новый обьект
                 if(item.id === id) {
-                    return {...item, increase: !item.increase}
+                    return {...item, [prop]: !item[prop]}
                 }
                 return item;
             })
         }))
     }
 
-    onToggleRise = (id) => {
-        this.setState(({data}) => ({
-            data: data.map(item => { 
-                if(item.id === id) {
-                    return {...item, rise: !item.rise}
-                }
-                return item;
-            })
-        }))
+    searchEmp = (items, term) => { //в виде аргументов приходит массив данных который будем фильтровать и строка по которой искать
+        if(term.length === 0) {
+            return items;
+        }
+        return items.filter(item => {
+            return item.name.indexOf(term) > -1;
+        })
+    }
+
+    onUpdateSearch = (term) => {
+        this.setState({term});
+    }
+
+    filterPost = (items, filter) => {
+        switch (filter) {
+            case 'rise':
+                return items.filter(item => item.rise);
+            case 'moreThen1000':
+                return items.filter(item => item.salary>1000);
+            default:
+                return items
+        }
+    }
+
+    onFilterSelect = (filter) => {
+        this.setState({filter});
     }
 
     render() {
-
+        const {data, term, filter} = this.state;
         const employees = this.state.data.length; // общее количество сотрудников
         const increased = this.state.data.filter(item => item.increase).length; // перебираем обьект и выбираем только те у которых increase true
+        const visibleData = this.filterPost(this.searchEmp(data, term), filter);
 
         return (
             <div className='app'>
@@ -83,14 +103,13 @@ class App extends Component {
                     employees={employees}
                     increased={increased}/>
                 <div className="search-panel">
-                    <SearchPanel/>
-                    <AppFilter/>
+                    <SearchPanel onUpdateSearch={this.onUpdateSearch}/>
+                    <AppFilter filter={filter} onFilterSelect={this.onFilterSelect}/>
                 </div>
                 <EmployeesList 
-                    data={this.state.data}
+                    data={visibleData}
                     onDelete={this.deleteItem}
-                    onToggleIncrease={this.onToggleIncrease}
-                    onToggleRise={this.onToggleRise}/>
+                    onToggleProp={this.onToggleProp}/>
                 <EmployeesAddForm
                     onAdd={this.addItem}/>
             </div>
